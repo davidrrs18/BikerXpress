@@ -395,7 +395,9 @@ nav ul li a:hover {
     transition: opacity 0.6s ease, filter 0.6s ease;
     border-radius: 12px;
     pointer-events: none;
+    display: block; /* Para que las imágenes ocupen el espacio pero sean invisibles */
 }
+
 
 .carousel-image.active {
     opacity: 1;
