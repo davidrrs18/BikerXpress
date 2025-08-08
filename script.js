@@ -63,71 +63,70 @@ function resetInterval() {
 
 
 
+//filtro talleres
+ document.addEventListener('DOMContentLoaded', () => {
+  const botonesCategoria = document.querySelectorAll('.categoria-btn');
+  const talleres = document.querySelectorAll('.taller');
+  const btnVerMas = document.getElementById('ver-mas');
 
-    // === Filtro de talleres ===
+  let visibleCount = 3; // número inicial de talleres visibles
 
-document.addEventListener('DOMContentLoaded', () => {
-  const filterButtons = document.querySelectorAll('.filter-btn');
-  const allItems = document.querySelectorAll('.workshop-item');
-  const toggleButton = document.getElementById('toggleButton');
-  let showAll = false;
-
-  function actualizarVisibilidad() {
-    const activeFilter = document.querySelector('.filter-btn.active');
-    const filtro = activeFilter ? activeFilter.dataset.filter : 'todos';
-
-    let visibles = [];
-
-    // Filtrar todos los elementos según el filtro activo
-    allItems.forEach(item => {
-      const categorias = item.dataset.category ? item.dataset.category.split(' ') : [];
-      const cumpleFiltro = filtro === 'todos' || categorias.includes(filtro);
-
-      if (cumpleFiltro) {
-        visibles.push(item);
+  // Función para mostrar talleres según la categoría y visibleCount
+  function filtrarTalleres(categoria) {
+    let contador = 0;
+    talleres.forEach(taller => {
+      // Mostrar solo los talleres que coinciden con la categoría o todos si es "all"
+      if (categoria === 'all' || taller.dataset.category === categoria) {
+        // Mostrar hasta visibleCount
+        if (contador < visibleCount) {
+          taller.classList.remove('hidden');
+        } else {
+          taller.classList.add('hidden');
+        }
+        contador++;
       } else {
-        item.style.display = 'none';
+        taller.classList.add('hidden');
       }
     });
 
-    // Mostrar solo los primeros 3 si showAll es false
-    visibles.forEach((item, index) => {
-      if (!showAll && index >= 3) {
-        item.style.display = 'none';
-      } else {
-        item.style.display = 'block';
-      }
-    });
-
-    // Mostrar u ocultar el botón según si hay más de 3 resultados
-    toggleButton.style.display = visibles.length > 3 ? 'inline-block' : 'none';
-    toggleButton.textContent = showAll ? 'Ver menos' : 'Ver más';
+    // Mostrar u ocultar botón "Ver más" dependiendo si quedan más talleres ocultos
+    const totalTalleres = [...talleres].filter(t => categoria === 'all' || t.dataset.category === categoria).length;
+    if (visibleCount >= totalTalleres) {
+      btnVerMas.style.display = 'none';
+    } else {
+      btnVerMas.style.display = 'inline-block';
+    }
   }
 
-  // Acciones de botones de filtro
-  filterButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      filterButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      showAll = false;
-      actualizarVisibilidad();
+  // Evento para los botones de categoría
+  botonesCategoria.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Reiniciar visibleCount al cambiar categoría
+      visibleCount = 3;
+
+      // Quitar clase activa a todos y ponerla al actual
+      botonesCategoria.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      filtrarTalleres(btn.dataset.category);
     });
   });
 
-  // Acción del botón "Ver más"
-  toggleButton.addEventListener('click', () => {
-    showAll = !showAll;
-    actualizarVisibilidad();
-
-    if (!showAll) {
-      const contenedor = document.getElementById('talleres');
-      if (contenedor) contenedor.scrollIntoView({ behavior: 'smooth' });
-    }
+  // Evento para botón "Ver más"
+  btnVerMas.addEventListener('click', () => {
+    visibleCount += 3; // mostrar 3 más
+    const categoriaActiva = [...botonesCategoria].find(b => b.classList.contains('active'))?.dataset.category || 'all';
+    filtrarTalleres(categoriaActiva);
   });
 
-  // Inicializar al cargar
-  actualizarVisibilidad();
+  // Mostrar todos al inicio
+  // Marcar el botón "Todos" como activo por defecto
+  const btnTodos = document.querySelector('.categoria-btn[data-category="all"]');
+  if (btnTodos) btnTodos.classList.add('active');
+  filtrarTalleres('all');
 });
+
+    
 
 
 

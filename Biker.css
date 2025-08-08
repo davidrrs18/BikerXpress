@@ -495,6 +495,38 @@ nav ul li a:hover {
 }
 
 
+/* Ocultar elementos */
+.hidden {
+    display: none !important;
+}
+
+/* Estilo para botón de categoría activo */
+.categoria-btn {
+    background-color: #fff;
+    color: #ff005c;
+    border: 2px solid #ff005c;
+    padding: 10px 20px;
+    margin: 0 8px 12px 0;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    user-select: none;
+}
+
+.categoria-btn:hover {
+    background-color: #ff005c;
+    color: white;
+}
+
+.categoria-btn.active {
+    background-color: #ff005c;
+    color: white;
+    box-shadow: 0 0 10px rgba(255, 0, 92, 0.6);
+    border-color: #ff005c;
+}
+
+
 
 /* Formulario de Contacto */
 .contact-form {
