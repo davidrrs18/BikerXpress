@@ -241,7 +241,7 @@ const contactForm = document.querySelector('.contact-form');
                 submitBtn.disabled = true;
             }
 
-            const serviceID = 'default_service'; // Service ID de EmailJS
+            const serviceID = 'service_xvop8ko'; // Service ID de EmailJS
             const templateID = 'template_sk2usq7'; // Template ID de EmailJS
 
             emailjs.sendForm(serviceID, templateID, this)
