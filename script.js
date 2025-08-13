@@ -1,4 +1,4 @@
-// script.js (Corregido)
+// script.js (Corregido para Talleres y Eventos)
 
 // Import Firebase desde CDN (versión módulos)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
@@ -21,109 +21,155 @@ getAnalytics(app);
 // Espera a que todo el HTML esté cargado para ejecutar el script
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- VARIABLES GLOBALES PARA TALLERES ---
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const workshopItems = document.querySelectorAll('.workshop-item');
-    const verMasBtn = document.getElementById('toggleButton');
+    // ======================================================
+    // === LÓGICA PARA LA PÁGINA DE TALLERES ================
+    // ======================================================
+    const talleresSection = document.getElementById('talleres');
+    if (talleresSection) {
+        const filterBtns = talleresSection.querySelectorAll('.filter-btn');
+        const workshopItems = talleresSection.querySelectorAll('.workshop-item');
+        const verMasBtn = talleresSection.querySelector('#toggleButton');
+        let areAllWorkshopsVisible = false;
 
-    // --- FUNCIÓN PARA MANEJAR LA VISIBILIDAD DE TALLERES Y EL BOTÓN "VER MÁS" ---
-    const handleWorkshopVisibility = (filtro = 'todos') => {
-        let visibles = 0;
-        let totalEnFiltro = 0;
+        const handleWorkshopVisibility = (filtro = 'todos') => {
+            let visibles = 0;
+            let totalEnFiltro = 0;
 
-        // Primero, contamos cuántos talleres hay en la categoría del filtro
-        workshopItems.forEach(item => {
-            if (filtro === 'todos' || item.dataset.category.includes(filtro)) {
-                totalEnFiltro++;
-            }
-        });
+            workshopItems.forEach(item => {
+                if (filtro === 'todos' || item.dataset.category.includes(filtro)) {
+                    totalEnFiltro++;
+                }
+            });
 
-        // Luego, mostramos los primeros 3 y ocultamos el resto
-        workshopItems.forEach(item => {
-            const isInFilter = filtro === 'todos' || item.dataset.category.includes(filtro);
-            
-            if (isInFilter) {
-                if (visibles < 3) {
-                    item.classList.remove('hidden');
-                    visibles++;
+            workshopItems.forEach(item => {
+                const isInFilter = filtro === 'todos' || item.dataset.category.includes(filtro);
+                if (isInFilter) {
+                    if (visibles < 3) {
+                        item.classList.remove('hidden');
+                        visibles++;
+                    } else {
+                        item.classList.add('hidden');
+                    }
                 } else {
                     item.classList.add('hidden');
                 }
+            });
+
+            if (totalEnFiltro > 3) {
+                verMasBtn.style.display = 'block';
+                verMasBtn.textContent = 'Ver más';
+                areAllWorkshopsVisible = false;
             } else {
-                item.classList.add('hidden');
+                verMasBtn.style.display = 'none';
+            }
+        };
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filtro = btn.dataset.filter;
+                handleWorkshopVisibility(filtro);
+            });
+        });
+
+        verMasBtn?.addEventListener('click', () => {
+            const filtroActivo = talleresSection.querySelector('.filter-btn.active').dataset.filter;
+            if (!areAllWorkshopsVisible) {
+                workshopItems.forEach(item => {
+                    const isInFilter = filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo);
+                    if (isInFilter) {
+                        item.classList.remove('hidden');
+                    }
+                });
+                verMasBtn.textContent = 'Ver menos';
+                areAllWorkshopsVisible = true;
+            } else {
+                let visibles = 0;
+                workshopItems.forEach(item => {
+                    const isInFilter = filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo);
+                    if (isInFilter) {
+                        if (visibles < 3) {
+                            visibles++;
+                        } else {
+                            item.classList.add('hidden');
+                        }
+                    }
+                });
+                verMasBtn.textContent = 'Ver más';
+                areAllWorkshopsVisible = false;
             }
         });
 
-        // Finalmente, decidimos si mostrar el botón "Ver más"
-        if (totalEnFiltro > 3) {
-            verMasBtn.style.display = 'block'; // Usamos 'block' para que sea visible
-        } else {
-            verMasBtn.style.display = 'none';
-        }
-    };
+        handleWorkshopVisibility('todos');
+    }
 
-    // --- LÓGICA PARA LOS BOTONES DE FILTRO ---
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Actualiza la clase 'active' en los botones
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Obtiene el filtro del botón presionado
-            const filtro = btn.dataset.filter;
-            
-            // Llama a la función principal para actualizar la vista
-            handleWorkshopVisibility(filtro);
-        });
-    });
+    // ======================================================
+    // === LÓGICA PARA LA PÁGINA DE EVENTOS =================
+    // ======================================================
+    const eventosSection = document.getElementById('eventos');
+    if (eventosSection) {
+        const eventFilterButtons = eventosSection.querySelectorAll('.filter-btn');
+        const eventItems = eventosSection.querySelectorAll('.event-item');
+        const calendarButtons = eventosSection.querySelectorAll('.btn-calendar');
 
-    // --- LÓGICA PARA EL BOTÓN "VER MÁS" ---
-    verMasBtn?.addEventListener('click', () => {
-        // Busca el filtro que está activo actualmente
-        const filtroActivo = document.querySelector('.filter-btn.active').dataset.filter;
+        // Lógica para los filtros de eventos
+        eventFilterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                eventFilterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const filtro = this.dataset.filter;
 
-        // Muestra todos los talleres ocultos que pertenecen al filtro activo
-        workshopItems.forEach(item => {
-            const isInFilter = filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo);
-            if (isInFilter && item.classList.contains('hidden')) {
-                item.classList.remove('hidden');
-            }
+                eventItems.forEach(item => {
+                    const categoria = item.dataset.category;
+                    item.style.display = (filtro === 'all' || categoria === filtro) ? 'block' : 'none';
+                });
+            });
         });
 
-        // Oculta el botón "Ver más" después de usarlo
-        verMasBtn.style.display = 'none';
-    });
+        // Lógica para el botón "Añadir al Calendario"
+        calendarButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const { title, description, start, end, location } = this.dataset;
 
-    // --- ESTADO INICIAL AL CARGAR LA PÁGINA ---
-    // Llama a la función con el filtro 'todos' por defecto
-    handleWorkshopVisibility('todos');
+                if (!title || !start || !end) {
+                    console.error("Faltan atributos 'data' en el botón del calendario.");
+                    return;
+                }
+
+                const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+                    `&text=${encodeURIComponent(title)}` +
+                    `&dates=${start}/${end}` +
+                    `&details=${encodeURIComponent(description || '')}` +
+                    `&location=${encodeURIComponent(location || '')}` +
+                    `&sf=true&output=xml`;
+
+                window.open(url, '_blank');
+            });
+        });
+    }
 
 
     // ======================================================
-    // === OTRAS FUNCIONALIDADES (CARRUSEL, MENÚ, ETC.) ===
+    // === FUNCIONALIDADES COMUNES (MENÚ, SCROLL, ETC.) =====
     // ======================================================
 
-    // === Carrusel ===
-    const images = document.querySelectorAll('.carousel-image');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    let currentIndex = 0;
-    let interval;
+    // === Carrusel (si existe en la página) ===
+    const carouselImages = document.querySelectorAll('.carousel-image');
+    if (carouselImages.length > 0) {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentIndex = 0;
+        let interval = setInterval(nextImage, 2000);
 
-    if (images.length > 0) {
         function showImage(index) {
-            images.forEach((img, i) => {
+            carouselImages.forEach((img, i) => {
                 img.classList.toggle('active', i === index);
             });
         }
 
         function nextImage() {
-            currentIndex = (currentIndex + 1) % images.length;
-            showImage(currentIndex);
-        }
-
-        function prevImage() {
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            currentIndex = (currentIndex + 1) % carouselImages.length;
             showImage(currentIndex);
         }
 
@@ -138,19 +184,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         prevBtn?.addEventListener('click', () => {
-            prevImage();
+            let currentIndex = (currentIndex - 1 + carouselImages.length) % carouselImages.length;
+            showImage(currentIndex);
             resetInterval();
         });
 
         showImage(currentIndex);
-        interval = setInterval(nextImage, 2000);
     }
-
 
     // === Menú de navegación con animación de salida ===
     document.querySelectorAll('.nav-menu a').forEach(link => {
         const href = link.getAttribute('href');
-        if (href && !href.startsWith('#')) { // Ignora los enlaces de ancla
+        if (href && !href.startsWith('#')) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 document.body.classList.add('fade-out');
@@ -164,21 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Botón de menú hamburguesa ===
     const toggleBtn = document.querySelector('.menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
-
     toggleBtn?.addEventListener('click', () => {
         navMenu?.classList.toggle('show');
-    });
-
-    document.querySelectorAll('.nav-menu a').forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu?.classList.remove('show');
-        });
     });
 
     // === Ocultar navbar al hacer scroll hacia abajo ===
     let lastScrollTop = 0;
     const nav = document.querySelector('nav');
-
     window.addEventListener('scroll', () => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         if (scrollTop > lastScrollTop) {
@@ -186,42 +223,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             nav.style.top = "0";
         }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // Evita valores negativos
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
     });
-
-    // === Galería de imágenes (cambio al hacer clic en miniaturas) ===
-    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
-        thumbnail.addEventListener('click', function() {
-            const mainImage = document.querySelector('.main-image');
-            if (mainImage) mainImage.src = this.src;
-        });
-    });
-
-    // === Filtro de eventos y botón de calendario ===
-    const eventItems = document.querySelectorAll('.event-item');
-    const calendarButtons = document.querySelectorAll('.btn-calendar');
-    // Nota: 'filterButtons' no está definido, asumo que te refieres a los botones de filtro de eventos
-    const eventFilterButtons = document.querySelectorAll('.event-filter-btn'); // Asumiendo que tienen esta clase
-
-    eventFilterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            eventFilterButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            const filtro = button.dataset.filter;
-
-            eventItems.forEach(item => {
-                const categoria = item.dataset.category;
-                item.style.display = (filtro === 'all' || categoria === filtro) ? 'block' : 'none';
-            });
-        });
-    });
-
-    calendarButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const { title, description, start, end, location } = this.dataset;
-            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}&sf=true&output=xml`;
-            window.open(url, '_blank');
-        });
-    });
-
 });
+
+// Inicializa EmailJS (reemplaza con tu User ID)
+emailjs.init("xzlpjS41LekviHAzH");
+
+const form = document.getElementById('contact-form');
+
+if(form) {
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    emailjs.sendForm('service_xvop8ko', 'dawsonorozco201@gmail.com', this)
+      .then(function() {
+        alert('Datos enviados');
+        form.reset();
+      }, function(error) {
+        alert('Error al enviar: ' + JSON.stringify(error));
+      });
+  });
+}
