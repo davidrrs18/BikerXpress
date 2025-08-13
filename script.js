@@ -227,39 +227,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Inicializa EmailJS (reemplaza con tu User ID)
-const contactForm = document.querySelector('.contact-form');
-    const submitBtn = contactForm ? contactForm.querySelector('button[type="submit"]') : null;
 
+
+document.addEventListener('DOMContentLoaded', () => {
+    // ... (todo tu código existente hasta el final)
+
+    // INICIALIZACIÓN DE EMAILJS (al principio del DOMContentLoaded)
+    emailjs.init('KZZkzoo8UVWisX-iU'); // Usa este User ID que ya tenías configurado
+
+    // CONFIGURACIÓN DEL FORMULARIO
+    const contactForm = document.querySelector('.contact-form');
     if(contactForm) {
-        contactForm.addEventListener('submit', function(event) {
-            event.preventDefault();
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
             
-            // Cambia el texto del botón durante el envío
-            if(submitBtn) {
-                submitBtn.textContent = 'Enviando...';
-                submitBtn.disabled = true;
-            }
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-            const serviceID = 'service_xvop8ko'; // Service ID de EmailJS
-            const templateID = 'template_sk2usq7'; // Template ID de EmailJS
-
-            emailjs.sendForm(serviceID, templateID, this)
-                .then(() => {
-                    // Restaura el botón y muestra mensaje de éxito
-                    if(submitBtn) {
-                        submitBtn.textContent = 'Enviar Mensaje';
-                        submitBtn.disabled = false;
-                    }
-                    alert('¡Mensaje enviado con éxito!');
-                    contactForm.reset();
-                }, (err) => {
-                    // Restaura el botón y muestra error
-                    if(submitBtn) {
-                        submitBtn.textContent = 'Enviar Mensaje';
-                        submitBtn.disabled = false;
-                    }
-                    alert('Error al enviar: ' + JSON.stringify(err));
-                });
+            emailjs.sendForm(
+                'service_z6fd8hr', // Service ID
+                'template_sk2usq7', // Template ID
+                this
+            )
+            .then(() => {
+                alert('¡Mensaje enviado con éxito!');
+                contactForm.reset();
+            })
+            .catch(err => {
+                console.error("Error completo:", err);
+                alert(`Error: ${err.text || 'No se pudo enviar el mensaje'}`);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar Mensaje';
+            });
         });
     }
+});
