@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Inicializa EmailJS (reemplaza con tu User ID)
-emailjs.init("xzlpjS41LekviHAzH");
+emailjs.init("KZZkzoo8UVWisX-iU");
 
 const form = document.getElementById('contact-form');
 
@@ -236,7 +236,7 @@ if(form) {
   form.addEventListener('submit', function(event) {
     event.preventDefault();
 
-    emailjs.sendForm('service_xvop8ko', 'dawsonorozco201@gmail.com', this)
+    emailjs.sendForm('default_service', 'template_sk2usq7', this)
       .then(function() {
         alert('Datos enviados');
         form.reset();
