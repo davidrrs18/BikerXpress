@@ -239,73 +239,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // INICIALIZACIÓN DE EMAILJS (al principio del DOMContentLoaded)
     emailjs.init('KZZkzoo8UVWisX-iU'); // Usa este User ID que ya tenías configurado
 
-   // === LÓGICA DEL FORMULARIO DE CONTACTO (TODAS LAS PÁGINAS)
-    // ======================================================
+    // CONFIGURACIÓN DEL FORMULARIO
     const contactForm = document.querySelector('.contact-form');
-    if (contactForm) {
-        // Inicializa EmailJS con tu User ID
-        if (typeof emailjs !== 'undefined') {
-            emailjs.init('KZZkzoo8UVWisX-iU');
-        } else {
-            console.error("Error: La librería de EmailJS no se ha cargado.");
-        }
-
-        // Crea un elemento para mostrar mensajes de estado
-        const statusMessage = document.createElement('p');
-        statusMessage.className = 'status-message';
-        contactForm.appendChild(statusMessage);
-
-        contactForm.addEventListener('submit', async function(e) {
+    if(contactForm) {
+        contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const submitBtn = contactForm.querySelector('button[type="submit"]');
+            
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Enviando...';
-            statusMessage.textContent = ''; // Limpia mensaje anterior
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-            // Verifica si EmailJS está disponible
-            if (typeof emailjs === 'undefined') {
-                statusMessage.textContent = 'Error de configuración. No se pudo enviar.';
-                statusMessage.style.color = 'red';
+            emailjs.sendForm(
+                'service_z6fd8hr', // Service ID
+                'template_sk2usq7', // Template ID
+                this
+            )
+            .then(() => {
+                alert('¡Mensaje enviado con éxito!');
+                contactForm.reset();
+            })
+            .catch(err => {
+                console.error("Error completo:", err);
+                alert(`Error: ${err.text || 'No se pudo enviar el mensaje'}`);
+            })
+            .finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Enviar Mensaje';
-                return;
-            }
-
-            try {
-                // 1. Preparar datos para Firestore
-                const contactData = {
-                    nombre: contactForm.querySelector('#nombre').value,
-                    email: contactForm.querySelector('#email').value,
-                    telefono: contactForm.querySelector('#telefono').value,
-                    mensaje: contactForm.querySelector('#mensaje').value,
-                    fecha: new Date() // Añade una marca de tiempo
-                };
-
-                // 2. Crear promesas para guardar en Firebase y enviar email
-                const saveToFirebase = addDoc(collection(firestore, "contactos"), contactData);
-                const sendEmail = emailjs.sendForm('service_z6fd8hr', 'template_sk2usq7', this);
-
-                // 3. Ejecutar ambas operaciones en paralelo
-                await Promise.all([saveToFirebase, sendEmail]);
-
-                // 4. Si ambas tienen éxito
-                statusMessage.textContent = '¡Mensaje enviado y registrado con éxito!';
-                statusMessage.style.color = 'green';
-                
-                setTimeout(() => {
-                    contactForm.reset();
-                    statusMessage.textContent = '';
-                }, 4000); // Limpia el formulario y el mensaje después de 4 segundos
-
-            } catch (error) {
-                console.error("Error al enviar el formulario: ", error);
-                statusMessage.textContent = 'Hubo un error al enviar el mensaje.';
-                statusMessage.style.color = 'red';
-            } finally {
-                // Reactivar el botón
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Enviar Mensaje';
-            }
+            });
         });
     }
 });
