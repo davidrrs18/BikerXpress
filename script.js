@@ -1,9 +1,5 @@
-// script.js (Corregido)
-
-// Import Firebase desde CDN (versión módulos)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -18,8 +14,7 @@ const firebaseConfig = {
 
 // Inicializa Firebase
 const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
-getAnalytics(app);
+const db = getFirestore(app);
 
 
 // Espera a que todo el HTML esté cargado para ejecutar el script
@@ -30,77 +25,118 @@ document.addEventListener('DOMContentLoaded', () => {
     const workshopItems = document.querySelectorAll('.workshop-item');
     const verMasBtn = document.getElementById('toggleButton');
 
-    // --- FUNCIÓN PARA MANEJAR LA VISIBILIDAD DE TALLERES Y EL BOTÓN "VER MÁS" ---
-    const handleWorkshopVisibility = (filtro = 'todos') => {
-        let visibles = 0;
-        let totalEnFiltro = 0;
+        // --- FUNCIÓN PARA MANEJAR LA VISIBILIDAD DE TALLERES Y EL BOTÓN "VER MÁS" ---
+    verMasBtn?.addEventListener('click', () => {
+        const filtroActivo = document.querySelector('.filter-btn.active').dataset.filter;
+        const isVerMas = verMasBtn.textContent === "Ver más";
 
-        // Primero, contamos cuántos talleres hay en la categoría del filtro
-        workshopItems.forEach(item => {
-            if (filtro === 'todos' || item.dataset.category.includes(filtro)) {
-                totalEnFiltro++;
-            }
-        });
-
-        // Luego, mostramos los primeros 3 y ocultamos el resto
-        workshopItems.forEach(item => {
-            const isInFilter = filtro === 'todos' || item.dataset.category.includes(filtro);
-            
-            if (isInFilter) {
-                if (visibles < 3) {
+        if (isVerMas) {
+            // Mostrar todos los talleres del filtro
+            workshopItems.forEach(item => {
+                const isInFilter = filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo);
+                if (isInFilter && item.classList.contains('hidden')) {
                     item.classList.remove('hidden');
-                    visibles++;
-                } else {
-                    item.classList.add('hidden');
                 }
-            } else {
-                item.classList.add('hidden');
+            });
+            verMasBtn.textContent = "Ver menos";
+        } else {
+            // Ocultar nuevamente dejando solo los primeros 3
+            handleWorkshopVisibility(filtroActivo);
+            verMasBtn.textContent = "Ver más";
+        }
+    });
+
+    // --- FORMULARIO DE CONTACTO ---
+    const contactForm = document.querySelector(".contact-form");
+    const contactMessage = document.getElementById("contact-message");
+
+    // Función para mostrar mensaje
+    function showContactMessage(msg, type) {
+    contactMessage.textContent = msg;
+    const contactMessage = document.getElementById("formMessage");
+    contactMessage.classList.add(type); // 'success' o 'error'
+    contactMessage.style.display = "block";
+
+    setTimeout(() => {
+        contactMessage.style.display = "none";
+    }, 4000);
+}
+
+    if (contactForm) {
+        contactForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Obtener valores del formulario
+            const nombre = document.getElementById("nombre").value;
+            const email = document.getElementById("email").value;
+            const telefono = document.getElementById("telefono").value;
+            const mensaje = document.getElementById("mensaje").value;
+
+            try {
+                await addDoc(collection(db, "contactos"), {
+                    nombre,
+                    email,
+                    telefono,
+                    mensaje,
+                    fecha: serverTimestamp()
+                });
+
+                // Mostrar mensaje de éxito
+                showContactMessage("✅ ¡Gracias! Tu mensaje se envió correctamente.", "success");
+                contactForm.reset();
+            } catch (error) {
+                console.error("❌ Error al guardar:", error);
+                showContactMessage("❌ Hubo un error al enviar tu mensaje. Intenta de nuevo.", "error");
             }
         });
+    }
 
-        // Finalmente, decidimos si mostrar el botón "Ver más"
-        if (totalEnFiltro > 3) {
-            verMasBtn.style.display = 'block'; // Usamos 'block' para que sea visible
-        } else {
-            verMasBtn.style.display = 'none';
-        }
-    };
 
     // --- LÓGICA PARA LOS BOTONES DE FILTRO ---
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Actualiza la clase 'active' en los botones
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
-            // Obtiene el filtro del botón presionado
             const filtro = btn.dataset.filter;
-            
-            // Llama a la función principal para actualizar la vista
             handleWorkshopVisibility(filtro);
         });
     });
 
-    // --- LÓGICA PARA EL BOTÓN "VER MÁS" ---
-    verMasBtn?.addEventListener('click', () => {
-        // Busca el filtro que está activo actualmente
-        const filtroActivo = document.querySelector('.filter-btn.active').dataset.filter;
+    // --- ESTADO INICIAL ---
+    function handleWorkshopVisibility(filtro = 'todos') {
+    let visibles = 0;
+    let totalEnFiltro = 0;
 
-        // Muestra todos los talleres ocultos que pertenecen al filtro activo
-        workshopItems.forEach(item => {
-            const isInFilter = filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo);
-            if (isInFilter && item.classList.contains('hidden')) {
-                item.classList.remove('hidden');
-            }
-        });
-
-        // Oculta el botón "Ver más" después de usarlo
-        verMasBtn.style.display = 'none';
+    workshopItems.forEach(item => {
+        if (filtro === 'todos' || item.dataset.category.includes(filtro)) {
+            totalEnFiltro++;
+        }
     });
 
-    // --- ESTADO INICIAL AL CARGAR LA PÁGINA ---
-    // Llama a la función con el filtro 'todos' por defecto
-    handleWorkshopVisibility('todos');
+    workshopItems.forEach(item => {
+        const isInFilter = filtro === 'todos' || item.dataset.category.includes(filtro);
+        if (isInFilter) {
+            if (visibles < 3) {
+                item.classList.remove('hidden');
+                visibles++;
+            } else {
+                item.classList.add('hidden');
+            }
+        } else {
+            item.classList.add('hidden');
+        }
+    });
+
+    if (verMasBtn) {
+        if (totalEnFiltro > 3) {
+            verMasBtn.style.display = 'block';
+            verMasBtn.textContent = "Ver más"; // 🔑 Reinicia siempre
+        } else {
+            verMasBtn.style.display = 'none';
+        }
+    }
+}
+
 
 
     // ======================================================
@@ -137,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         prevBtn?.addEventListener('click', () => {
-            let currentIndex = (currentIndex - 1 + carouselImages.length) % carouselImages.length;
+            currentIndex = (currentIndex - 1 + carouselImages.length) % carouselImages.length; 
             showImage(currentIndex);
             resetInterval();
         });
@@ -176,10 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             nav.style.top = "0";
         }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // Evita valores negativos
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
     });
 
-    // === Galería de imágenes (cambio al hacer clic en miniaturas) ===
+    // === Galería de imágenes (miniaturas) ===
     document.querySelectorAll('.thumbnail').forEach(thumbnail => {
         thumbnail.addEventListener('click', function() {
             const mainImage = document.querySelector('.main-image');
@@ -190,8 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Filtro de eventos y botón de calendario ===
     const eventItems = document.querySelectorAll('.event-item');
     const calendarButtons = document.querySelectorAll('.btn-calendar');
-    // Nota: 'filterButtons' no está definido, asumo que te refieres a los botones de filtro de eventos
-    const eventFilterButtons = document.querySelectorAll('.event-filter-btn'); // Asumiendo que tienen esta clase
+    const eventFilterButtons = document.querySelectorAll('.event-filter-btn'); 
 
     eventFilterButtons.forEach(button => {
         button.addEventListener('click', function() {
