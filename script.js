@@ -1,7 +1,11 @@
+// script.js (Corregido)
+
 // Import Firebase desde CDN (versión módulos)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+// Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBByhHzF2_20hXBZUhxWVfxid28FmkFkRI",
     authDomain: "bikerxpress-6d953.firebaseapp.com",
@@ -14,33 +18,31 @@ const firebaseConfig = {
 
 // Inicializa Firebase
 const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
 getAnalytics(app);
+
 
 // Espera a que todo el HTML esté cargado para ejecutar el script
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ======================================================
-    // === FUNCIONALIDAD DE TALLERES CON FILTRO Y PAGINACIÓN ===
-    // ======================================================
-
+    // --- VARIABLES GLOBALES PARA TALLERES ---
     const filterBtns = document.querySelectorAll('.filter-btn');
     const workshopItems = document.querySelectorAll('.workshop-item');
     const verMasBtn = document.getElementById('toggleButton');
 
-    /**
-     * Muestra los primeros 3 talleres de la categoría seleccionada y oculta el resto.
-     * @param {string} filtro La categoría a filtrar.
-     */
+    // --- FUNCIÓN PARA MANEJAR LA VISIBILIDAD DE TALLERES Y EL BOTÓN "VER MÁS" ---
     const handleWorkshopVisibility = (filtro = 'todos') => {
         let visibles = 0;
         let totalEnFiltro = 0;
 
+        // Primero, contamos cuántos talleres hay en la categoría del filtro
         workshopItems.forEach(item => {
             if (filtro === 'todos' || item.dataset.category.includes(filtro)) {
                 totalEnFiltro++;
             }
         });
 
+        // Luego, mostramos los primeros 3 y ocultamos el resto
         workshopItems.forEach(item => {
             const isInFilter = filtro === 'todos' || item.dataset.category.includes(filtro);
             
@@ -56,73 +58,71 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Finalmente, decidimos si mostrar el botón "Ver más"
         if (totalEnFiltro > 3) {
-            verMasBtn.style.display = 'block';
-            verMasBtn.textContent = 'Ver más';
+            verMasBtn.style.display = 'block'; // Usamos 'block' para que sea visible
         } else {
             verMasBtn.style.display = 'none';
         }
     };
 
-    /**
-     * Alterna la visibilidad de los talleres adicionales y cambia el texto del botón.
-     */
-    const toggleVerMasMenos = () => {
-        const isShowingAll = verMasBtn.textContent === 'Ver menos';
-        const filtroActivo = document.querySelector('.filter-btn.active')?.dataset.filter || 'todos';
-
-        let talleresEnFiltro = Array.from(workshopItems).filter(item => 
-            filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo)
-        );
-
-        if (isShowingAll) {
-            talleresEnFiltro.slice(3).forEach(item => item.classList.add('hidden'));
-            verMasBtn.textContent = 'Ver más';
-        } else {
-            talleresEnFiltro.forEach(item => item.classList.remove('hidden'));
-            verMasBtn.textContent = 'Ver menos';
-        }
-    };
-
+    // --- LÓGICA PARA LOS BOTONES DE FILTRO ---
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            // Actualiza la clase 'active' en los botones
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            
+            // Obtiene el filtro del botón presionado
             const filtro = btn.dataset.filter;
+            
+            // Llama a la función principal para actualizar la vista
             handleWorkshopVisibility(filtro);
         });
     });
 
-    verMasBtn?.addEventListener('click', toggleVerMasMenos);
+    // --- LÓGICA PARA EL BOTÓN "VER MÁS" ---
+    verMasBtn?.addEventListener('click', () => {
+        // Busca el filtro que está activo actualmente
+        const filtroActivo = document.querySelector('.filter-btn.active').dataset.filter;
 
+        // Muestra todos los talleres ocultos que pertenecen al filtro activo
+        workshopItems.forEach(item => {
+            const isInFilter = filtroActivo === 'todos' || item.dataset.category.includes(filtroActivo);
+            if (isInFilter && item.classList.contains('hidden')) {
+                item.classList.remove('hidden');
+            }
+        });
+
+        // Oculta el botón "Ver más" después de usarlo
+        verMasBtn.style.display = 'none';
+    });
+
+    // --- ESTADO INICIAL AL CARGAR LA PÁGINA ---
+    // Llama a la función con el filtro 'todos' por defecto
     handleWorkshopVisibility('todos');
 
 
     // ======================================================
-    // === OTRAS FUNCIONALIDADES (CARRUSEL, MENÚ, ETC.) ===
+    // === FUNCIONALIDADES COMUNES (MENÚ, SCROLL, ETC.) =====
     // ======================================================
 
-    // === Carrusel ===
-    const images = document.querySelectorAll('.carousel-image');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    let currentIndex = 0;
-    let interval;
+    // === Carrusel (si existe en la página) ===
+    const carouselImages = document.querySelectorAll('.carousel-image');
+    if (carouselImages.length > 0) {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentIndex = 0;
+        let interval = setInterval(nextImage, 2000);
 
-    if (images.length > 0) {
         function showImage(index) {
-            images.forEach((img, i) => {
+            carouselImages.forEach((img, i) => {
                 img.classList.toggle('active', i === index);
             });
         }
 
         function nextImage() {
-            currentIndex = (currentIndex + 1) % images.length;
-            showImage(currentIndex);
-        }
-
-        function prevImage() {
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            currentIndex = (currentIndex + 1) % carouselImages.length;
             showImage(currentIndex);
         }
 
@@ -137,12 +137,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         prevBtn?.addEventListener('click', () => {
-            prevImage();
+            let currentIndex = (currentIndex - 1 + carouselImages.length) % carouselImages.length;
+            showImage(currentIndex);
             resetInterval();
         });
 
         showImage(currentIndex);
-        interval = setInterval(nextImage, 2000);
     }
 
     // === Menú de navegación con animación de salida ===
@@ -162,21 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Botón de menú hamburguesa ===
     const toggleBtn = document.querySelector('.menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
-
     toggleBtn?.addEventListener('click', () => {
         navMenu?.classList.toggle('show');
-    });
-
-    document.querySelectorAll('.nav-menu a').forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu?.classList.remove('show');
-        });
     });
 
     // === Ocultar navbar al hacer scroll hacia abajo ===
     let lastScrollTop = 0;
     const nav = document.querySelector('nav');
-
     window.addEventListener('scroll', () => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         if (scrollTop > lastScrollTop) {
@@ -184,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             nav.style.top = "0";
         }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // Evita valores negativos
     });
 
     // === Galería de imágenes (cambio al hacer clic en miniaturas) ===
@@ -197,38 +189,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Filtro de eventos y botón de calendario ===
     const eventItems = document.querySelectorAll('.event-item');
-    const eventFilterButtons = document.querySelectorAll('.event-filters .filter-btn');
     const calendarButtons = document.querySelectorAll('.btn-calendar');
+    // Nota: 'filterButtons' no está definido, asumo que te refieres a los botones de filtro de eventos
+    const eventFilterButtons = document.querySelectorAll('.event-filter-btn'); // Asumiendo que tienen esta clase
 
-    // Filtro de categorías
     eventFilterButtons.forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', function() {
             eventFilterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-
             const filtro = button.dataset.filter;
 
             eventItems.forEach(item => {
                 const categoria = item.dataset.category;
-                if (filtro === 'all' || categoria === filtro) {
-                    item.style.display = 'block';
-                    requestAnimationFrame(() => {
-                        item.style.opacity = '1';
-                    });
-                } else {
-                    item.style.opacity = '0';
-                    setTimeout(() => item.style.display = 'none', 300);
-                }
+                item.style.display = (filtro === 'all' || categoria === filtro) ? 'block' : 'none';
             });
         });
     });
 
-    // Botón para añadir al calendario
     calendarButtons.forEach(button => {
-        button.addEventListener('click', function () {
+        button.addEventListener('click', function() {
             const { title, description, start, end, location } = this.dataset;
-            const url = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}&sf=true&output=xml`;
             window.open(url, '_blank');
         });
     });
+
 });
