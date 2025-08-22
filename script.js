@@ -47,75 +47,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- FORMULARIO DE CONTACTO ---
-    const contactForm = document.querySelector(".contact-form");
-    const contactMessage = document.getElementById("contact-message");
-
-    // Función para mostrar mensaje
-    function showContactMessage(msg, type) {
-    contactMessage.textContent = msg;
-    const contactMessage = document.getElementById("formMessage");
-    contactMessage.classList.add(type); // 'success' o 'error'
-    contactMessage.style.display = "block";
-
-    setTimeout(() => {
-        contactMessage.style.display = "none";
-    }, 4000);
-}
-
-    if (contactForm) {
-        contactForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            // Obtener valores del formulario
-            const nombre = document.getElementById("nombre").value;
-            const email = document.getElementById("email").value;
-            const telefono = document.getElementById("telefono").value;
-            const mensaje = document.getElementById("mensaje").value;
-
-            try {
-                await addDoc(collection(db, "contactos"), {
-                    nombre,
-                    email,
-                    telefono,
-                    mensaje,
-                    fecha: serverTimestamp()
-                });
-
-                // Mostrar mensaje de éxito
-                showContactMessage("✅ ¡Gracias! Tu mensaje se envió correctamente.", "success");
-                contactForm.reset();
-            } catch (error) {
-                console.error("❌ Error al guardar:", error);
-                showContactMessage("❌ Hubo un error al enviar tu mensaje. Intenta de nuevo.", "error");
-            }
-        });
-    }
-
-    //funcion correo gmail
-
-    document.getElementById('contact-form').addEventListener('submit', function(event) {
+    document.getElementById('contact-form').addEventListener('submit', async function(event) {
     event.preventDefault();
 
+    const formData = new FormData(this);
     const submitButton = this.querySelector('button[type="submit"]');
     submitButton.classList.add('loading');
 
-    const formData = new FormData(this);
+    try {
+        // 1️⃣ Guardar en Firebase
+        await addDoc(collection(db, "contactos"), {
+            nombre: formData.get("nombre"),
+            email: formData.get("email"),
+            telefono: formData.get("telefono"),
+            mensaje: formData.get("mensaje"),
+            fecha: serverTimestamp()
+        });
 
-    fetch('/send_email', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(data => {
-        showFlashMessage('Mensaje enviado correctamente.', 'success');
-        this.reset(); // Limpia el formulario
+        // 2️⃣ Enviar correo al backend Flask
+        const response = await fetch('/send_email', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+    } catch (error) {
+        if (response.ok && result.success) {
+            showFlashMessage("✅ " + result.message, "success");
+            this.reset(); // 🔹 Reinicia formulario
+        } else {
+            showFlashMessage("❌ Error: " + result.message, "danger");
+        }
+    } finally {
         submitButton.classList.remove('loading');
-    })
-    .catch(error => {
-        showFlashMessage('Hubo un error al enviar el mensaje.', 'danger');
-        console.error('Error:', error);
-        submitButton.classList.remove('loading');
-    });
+    }
 });
 
 function showFlashMessage(message, category) {
@@ -123,15 +89,10 @@ function showFlashMessage(message, category) {
     const flashMessage = document.createElement('div');
     flashMessage.className = `alert ${category}`;
     flashMessage.textContent = message;
-
     flashContainer.appendChild(flashMessage);
 
-    setTimeout(() => {
-        flashMessage.remove();
-    }, 5000);
+    setTimeout(() => flashMessage.remove(), 5000);
 }
-
-
 
     // --- LÓGICA PARA LOS BOTONES DE FILTRO ---
     filterBtns.forEach(btn => {
