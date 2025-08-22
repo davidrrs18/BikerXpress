@@ -37,7 +37,7 @@
                 <section id="inicio" class="hero" style="background: url('IMG/FondoP.png') no-repeat center center/cover;">
                     <h2>Todo los Accesorios para tu Moto en un solo lugar</h2>
                     <p>Encuentra los mejores accesorios y repuestos para mantener tu máquina siempre lista.</p>
-                    <a href="#talleres" class="btn">Explora nuestros Accesorios</a>
+                    <a href="#productos" class="btn">Explora nuestros Accesorios</a>
                     
                 </section>
                 <div class="container">
@@ -125,40 +125,44 @@
                     <h2 id="llantas"> neumáticos </h2>
                     <div class="product-grid">
                         <div class="product-item">
-                            <img src="https://publimotos.com/wp-content/uploads/2023/09/pirelli-diablo-01.jpg" alt="Llantas Pirelli de Alto Rendimiento">
+                            <img src="https://www.mercaneumaticos.com/wp-content/uploads/pirelli-diablo-rosso-III-banner.jpg" alt="Llantas Pirelli de Alto Rendimiento">
                             <div class="product-content">
                                 <h3>Llantas Pirelli Diablo Rosso III</h3>
                                 <p>Agarre excepcional y estabilidad en curvas para un rendimiento deportivo tanto en carretera como en pista.</p>
+                                <p class="product-price">C$6000.00</p>
+                                <a href="#" class="btn btn-small">Ver Detalles</a>
                             </div>
                         </div>
                     </div>
                 </div>
                         
             <div class="container">
-                <section id="contacto" class="section">
-                    <h2>Contáctanos</h2>
-                    <p class="text-center">¿Tienes un taller o tienda que quieres promocionar? ¿Necesitas ayuda?</p>
-                    <form action="#" method="POST" class="contact-form">
-                        <div class="form-group">
-                            <label for="nombre">Nombre:</label>
-                            <input type="text" id="nombre" name="nombre" required>
-                        </div>
-                                        <div class="form-group">
-                                            <label for="email">Email:</label>
-                                            <input type="email" id="email" name="email" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="telefono">Teléfono (Opcional):</label>
-                                            <input type="tel" id="telefono" name="telefono">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="mensaje">Mensaje:</label>
-                                            <textarea id="mensaje" name="mensaje" rows="5" required></textarea>
-                                        </div>
-                                        <button type="submit" class="btn">Enviar Mensaje</button>
-                                    </form>
-                                </section>
-                                </div>
+            <section id="contacto" class="section">
+                <h2>Contáctanos</h2>
+                <p class="text-center">¿Tienes un taller o tienda que quieres promocionar? ¿Necesitas ayuda?</p>
+                <form id="contact-form" class="contact-form">
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" id="nombre" name="nombre" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono (Opcional):</label>
+                        <input type="tel" id="telefono" name="telefono" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mensaje">Mensaje:</label>
+                        <textarea id="mensaje" name="mensaje" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Enviar Mensaje</button>
+
+                    <div id="flash-messages" class="flash-container"></div>
+                </form>
+            </section>
+        </div>
                     </main>
                 <footer>
                     <p>© 2025 Biker Xpress. Todos los derechos reservados.</p>

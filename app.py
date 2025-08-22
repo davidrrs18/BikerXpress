@@ -2,11 +2,16 @@ from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 import os
+from flask_cors import CORS
+
+
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', '1234')
+
+CORS(app)
 
 # Configuración de correo
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -17,6 +22,7 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']  # 🔹 Default sender
 
 mail = Mail(app)
+
 
 @app.route("/send_email", methods=["POST"])
 def send_email():

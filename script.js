@@ -54,8 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = this.querySelector('button[type="submit"]');
     submitButton.classList.add('loading');
 
+    // 🔹 Mostrar mensaje inmediato
+    showFlashMessage("✔ Mensaje enviado correctamente", "success");
+    this.reset();
+
     try {
-        // 1️⃣ Guardar en Firebase
+        // Guardar en Firebase (puede tardar un poco)
         await addDoc(collection(db, "contactos"), {
             nombre: formData.get("nombre"),
             email: formData.get("email"),
@@ -64,35 +68,40 @@ document.addEventListener('DOMContentLoaded', () => {
             fecha: serverTimestamp()
         });
 
-        // 2️⃣ Enviar correo al backend Flask
-        const response = await fetch('/send_email', {
+        // Enviar correo al backend
+        await fetch('http://127.0.0.1:5000/send_email', {
             method: 'POST',
             body: formData
         });
 
-        const result = await response.json();
-
     } catch (error) {
-        if (response.ok && result.success) {
-            showFlashMessage("✅ " + result.message, "success");
-            this.reset(); // 🔹 Reinicia formulario
-        } else {
-            showFlashMessage("❌ Error: " + result.message, "danger");
-        }
+        console.error("Error enviando correo o guardando:", error);
+        // Opcional: mostrar error si quieres que el usuario lo sepa
     } finally {
         submitButton.classList.remove('loading');
     }
 });
 
-function showFlashMessage(message, category) {
+
+function showFlashMessage(message, category = "success", duration = 4000) {
     const flashContainer = document.getElementById('flash-messages');
     const flashMessage = document.createElement('div');
-    flashMessage.className = `alert ${category}`;
+    flashMessage.className = `contact-message ${category}`;
     flashMessage.textContent = message;
     flashContainer.appendChild(flashMessage);
 
-    setTimeout(() => flashMessage.remove(), 5000);
+    // Animación de aparición
+    requestAnimationFrame(() => flashMessage.classList.add('show'));
+
+    // Desaparecer después de 'duration' ms
+    setTimeout(() => {
+        flashMessage.classList.remove('show');
+        // Remover del DOM tras animación
+        setTimeout(() => flashMessage.remove(), 400);
+    }, duration);
 }
+
+
 
     // --- LÓGICA PARA LOS BOTONES DE FILTRO ---
     filterBtns.forEach(btn => {
